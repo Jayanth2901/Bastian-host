@@ -4,21 +4,14 @@ on:
   push:
     branches:
       - main
-      - feature/*
-
-env:
-  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-  ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
-  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
 jobs:
 
-  terraform-init:
-    name: Terraform Init Stage
+  terraform:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -28,28 +21,10 @@ jobs:
       - name: Azure Login
         uses: azure/login@v2
         with:
-          creds: |
-            {
-              "clientId":"${{ secrets.ARM_CLIENT_ID }}",
-              "clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}",
-              "subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}",
-              "tenantId":"${{ secrets.ARM_TENANT_ID }}"
-            }
-
-      - name: Terraform Init
-        run: terraform init
-
-  terraform-validate:
-    name: Terraform Validate Stage
-    runs-on: ubuntu-latest
-    needs: terraform-init
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+          client-id: ${{ secrets.ARM_CLIENT_ID }}
+          tenant-id: ${{ secrets.ARM_TENANT_ID }}
+          subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          client-secret: ${{ secrets.ARM_CLIENT_SECRET }}
 
       - name: Terraform Init
         run: terraform init
@@ -57,38 +32,8 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
 
-  terraform-plan:
-    name: Terraform Plan Stage
-    runs-on: ubuntu-latest
-    needs: terraform-validate
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
-        run: terraform init
-
       - name: Terraform Plan
-        run: terraform plan -out=tfplan
-
-  terraform-apply:
-    name: Terraform Apply Stage
-    runs-on: ubuntu-latest
-    needs: terraform-plan
-
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
-        run: terraform init
+        run: terraform plan
 
       - name: Terraform Apply
         run: terraform apply -auto-approve
